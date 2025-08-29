@@ -25,7 +25,7 @@ class AutoPetter {
     this.regularInterval = null;
     this.hasStartedRegularSchedule = false;
     
-    console.log("Hybrid Aavegotchi Auto-Petter Bot");
+    console.log("Aavegotchi Auto-Petter Bot");
     console.log(`Diamond: ${this.AAVEGOTCHI_DIAMOND}`);
     console.log(`Owner: ${this.GOTCHI_OWNER}`);
     console.log(`Signer: ${this.signer.address}`);
