@@ -21,7 +21,7 @@ An automated bot that pets your Aavegotchi NFTs on the Base network every 12 hou
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/Zaunzi/aavegotchi-auto-petter
    cd aavegotchi-auto-petter
    ```
 
@@ -221,8 +221,8 @@ If you encounter issues:
 
 ## License
 
-This project is for educational purposes. Use at your own risk and ensure compliance with relevant terms of service.
+This project is for educational purposes. Use at your own risk 
 
 ---
 
-**Happy Petting! 🐾**
+**Happy Petting! 👻**
