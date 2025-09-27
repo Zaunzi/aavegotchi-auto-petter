@@ -37,7 +37,7 @@ An automated bot that pets your Aavegotchi NFTs on the Base network every 12 hou
    ```
 
 4. **Fill in your configuration in `.env`:**
-   - `PRIVATE_KEY`: Your wallet's private key (without 0x prefix)
+   - `PRIVATE_KEY`: Your wallet's private key (with 0x prefix)
    - `GOTCHI_OWNER`: Ethereum address that owns the Aavegotchis
 
 ## Enable Pet Operator Permission
@@ -82,7 +82,7 @@ If you ever want to revoke petting permissions:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `PRIVATE_KEY` | Your wallet's private key (without 0x) | `abcd1234...` |
+| `PRIVATE_KEY` | Your wallet's private key (with 0x prefix) | `0xabcd1234...` |
 | `GOTCHI_OWNER` | Address owning the Aavegotchis | `0x1234...` |
 
 ### Optional Environment Variables
