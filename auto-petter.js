@@ -7,7 +7,8 @@ const AAVEGOTCHI_GAME_FACET_ABI = [
 
 const AAVEGOTCHI_FACET_ABI = [
   "function tokenIdsOfOwner(address _owner) external view returns (uint32[] memory tokenIds_)",
-  "function getAavegotchi(uint256 _tokenId) external view returns (tuple(uint256 tokenId, string name, address owner, uint256 randomNumber, uint256 status, int16[6] numericTraits, int16[6] modifiedNumericTraits, uint16[16] equippedWearables, address collateral, address escrow, uint256 stakedAmount, uint256 minimumStake, uint256 kinship, uint256 lastInteracted, uint256 experience, uint256 toNextLevel, uint256 usedSkillPoints, uint256 level, uint256 hauntId, uint256 baseRarityScore, uint256 modifiedRarityScore, bool locked) aavegotchiInfo)"
+  "function getAavegotchi(uint256 _tokenId) external view returns (tuple(uint256 tokenId, string name, address owner, uint256 randomNumber, uint256 status, int16[6] numericTraits, int16[6] modifiedNumericTraits, uint16[16] equippedWearables, address collateral, address escrow, uint256 stakedAmount, uint256 minimumStake, uint256 kinship, uint256 lastInteracted, uint256 experience, uint256 toNextLevel, uint256 usedSkillPoints, uint256 level, uint256 hauntId, uint256 baseRarityScore, uint256 modifiedRarityScore, bool locked) aavegotchiInfo)",
+  "function allAavegotchisOfOwner(address _owner) external view returns (tuple(uint256 tokenId, string name, address owner, uint256 randomNumber, uint256 status, int16[6] numericTraits, int16[6] modifiedNumericTraits, uint16[16] equippedWearables, address collateral, address escrow, uint256 stakedAmount, uint256 minimumStake, uint256 kinship, uint256 lastInteracted, uint256 experience, uint256 toNextLevel, uint256 usedSkillPoints, uint256 level, uint256 hauntId, uint256 baseRarityScore, uint256 modifiedRarityScore, bool locked)[] memory aavegotchiInfo_)"
 ];
 
 class AavegotchiAutoPetter {
@@ -33,41 +34,31 @@ class AavegotchiAutoPetter {
     try {
       console.log("Checking when gotchis will be ready...");
       
-      const tokenIds32 = await this.aavegotchiFacet.tokenIdsOfOwner(this.GOTCHI_OWNER);
-      console.log(`Found ${tokenIds32.length} Aavegotchis, checking first 3...`);
+      const allGotchis = await this.aavegotchiFacet.allAavegotchisOfOwner(this.GOTCHI_OWNER);
+      console.log(`Found ${allGotchis.length} Aavegotchis (portals excluded)`);
       
-      let oldestLastInteracted = Number.MAX_SAFE_INTEGER;
-      let checkedCount = 0;
-      
-      // Check first 3 gotchis only
-      for (let i = 0; i < Math.min(tokenIds32.length, 3); i++) {
-        try {
-          const tokenId = tokenIds32[i];
-          const aavegotchiInfo = await this.aavegotchiFacet.getAavegotchi(tokenId);
-          const lastInteracted = Number(aavegotchiInfo.lastInteracted);
-          
-          if (lastInteracted < oldestLastInteracted) {
-            oldestLastInteracted = lastInteracted;
-          }
-          
-          checkedCount++;
-          await new Promise(resolve => setTimeout(resolve, 200));
-          
-        } catch (error) {
-          console.log(`Skipping token ${i}, continuing...`);
-          continue;
-        }
+      if (allGotchis.length === 0) {
+        console.log("No Aavegotchis found, will check again later");
+        return this.PET_INTERVAL;
       }
       
-      if (oldestLastInteracted === Number.MAX_SAFE_INTEGER) {
-        console.log("Could not determine timing, will pet now");
-        return 0;
+      // Filter only status 3 (opened Aavegotchis, excluding portals)
+      const pettableGotchis = allGotchis.filter(gotchi => Number(gotchi.status) === 3);
+      console.log(`Found ${pettableGotchis.length} pettable Aavegotchis`);
+      
+      let oldestLastInteracted = Number.MAX_SAFE_INTEGER;
+      
+      // Check first 3 only for timing
+      for (let i = 0; i < Math.min(pettableGotchis.length, 3); i++) {
+        const lastInteracted = Number(pettableGotchis[i].lastInteracted);
+        if (lastInteracted < oldestLastInteracted) {
+          oldestLastInteracted = lastInteracted;
+        }
       }
       
       const nextReadyTime = oldestLastInteracted + (12 * 60 * 60) + 30;
       const currentTime = Math.floor(Date.now() / 1000);
       
-      console.log(`Checked ${checkedCount} gotchis`);
       console.log(`Oldest interaction: ${new Date(oldestLastInteracted * 1000)}`);
       console.log(`Next ready time: ${new Date(nextReadyTime * 1000)}`);
       
@@ -84,7 +75,7 @@ class AavegotchiAutoPetter {
       
     } catch (error) {
       console.error("Error checking timing:", error.message);
-      return 0; // Pet immediately if check fails
+      return 0;
     }
   }
 
@@ -92,15 +83,25 @@ class AavegotchiAutoPetter {
     try {
       console.log(`${new Date().toLocaleString()} - Petting all Aavegotchis...`);
       
-      const tokenIds32 = await this.aavegotchiFacet.tokenIdsOfOwner(this.GOTCHI_OWNER);
-      console.log(`Found ${tokenIds32.length} Aavegotchis to pet`);
+      const allGotchis = await this.aavegotchiFacet.allAavegotchisOfOwner(this.GOTCHI_OWNER);
+      console.log(`Found ${allGotchis.length} total gotchis`);
       
-      if (tokenIds32.length === 0) {
+      if (allGotchis.length === 0) {
         console.log("No Aavegotchis found!");
         return false;
       }
       
-      const tokenIds = tokenIds32.map(id => BigInt(id));
+      // Filter only status 3 (opened Aavegotchis, excluding portals)
+      const validGotchis = allGotchis.filter(gotchi => Number(gotchi.status) === 3);
+      
+      console.log(`Petting ${validGotchis.length} Aavegotchis (filtered out ${allGotchis.length - validGotchis.length} portals)`);
+      
+      if (validGotchis.length === 0) {
+        console.log("No pettable Aavegotchis found!");
+        return false;
+      }
+      
+      const tokenIds = validGotchis.map(gotchi => BigInt(gotchi.tokenId));
       
       console.log("Calling interact...");
       const tx = await this.aavegotchiGameFacet.interact(tokenIds);
